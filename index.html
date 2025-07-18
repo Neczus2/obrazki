@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gra Drużynowa</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: #f9f9f9;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 26px;
+      background-color: #ececec;
+      font-size: 1.25em;
+      font-weight: bold;
+      border-bottom: 1.5px solid #ccc;
+    }
+    .screen {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      text-align: center;
+    }
+    #start-screen,
+    #game-screen,
+    #end-screen {
+      height: calc(100vh - 50px);
+    }
+    img {
+      max-width: 80vw;
+      max-height: 60vh;
+      margin-bottom: 30px;
+      border: 2.5px solid #565656;
+      border-radius: 12px;
+      background: #fff;
+    }
+    #timer {
+      font-size: 2.4em;
+      margin-top: 18px;
+      font-weight: bold;
+      color: #795548;
+      letter-spacing: 2px;
+    }
+    #end-screen h1 {
+      font-size: 2.3em;
+      margin-bottom: 18px;
+    }
+    #final-score {
+      font-size: 1.7em;
+      margin-top: 12px;
+    }
+    button {
+      font-size: 1.1em;
+      padding: 13px 36px;
+      border-radius: 7px;
+      border: none;
+      background: #48a868;
+      color: white;
+      margin-top: 24px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #357048;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div id="score-team1">Drużyna 1: 0</div>
+    <div id="score-team2">Drużyna 2: 0</div>
+  </header>
+
+  <!-- Start screen -->
+  <div id="start-screen" class="screen">
+    <h1>Gra Drużynowa</h1>
+    <p>Zasady: Masz 45 sekund na zgadnięcie obrazka. Po czasie wybierz drużynę, która zdobyła punkt.</p>
+    <p>Klawisz 1 - punkt dla drużyny 1 (+2 pkt)</p>
+    <p>Klawisz 2 - punkt dla drużyny 2 (+2 pkt)</p>
+    <p>Klawisz 3 - brak punktów (przejdź dalej)</p>
+    <button onclick="startGame()">Start</button>
+  </div>
+
+  <!-- Game screen -->
+  <div id="game-screen" class="screen">
+    <img id="game-image" src="" alt="Obrazek" />
+    <div id="timer">45</div>
+  </div>
+
+  <!-- End screen -->
+  <div id="end-screen" class="screen">
+    <h1>Koniec gry!</h1>
+    <div id="final-score"></div>
+  </div>
+
+  <script>
+    let team1 = 0;
+    let team2 = 0;
+    let currentImageIndex = 0;
+    const totalImages = 30;
+    const timerDuration = 30;
+    let timer = timerDuration;
+    let interval = null;
+
+    const images = [
+  'https://checkpress.pl/static/files/gallery/579/1253326_68330.webp',
+  'https://m.media-amazon.com/images/M/MV5BMGI3OTI0NjctMjM2ZC00MjZiLWIxMjctODczN2M4MTFjZmY1XkEyXkFqcGdeQXJoYW5uYWg@._V1_.jpg',
+  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHbChRkXDMSSntQQDsXaKHdnpjMrO0__4GUQ&s',
+  'https://www.blenderrap.pl/wp-content/uploads/2017/04/Kendrick-Lamar.jpg',
+  'https://www.billboard.com/wp-content/uploads/2025/01/Drake-2019-red-carpet-billboard-pro-1260.jpg?w=942&h=623&crop=1',
+  'https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/1115D/production/_116818996_lil.png.webp',
+  'https://media.themoviedb.org/t/p/w500/byiNydUlM6oP8diA7WMvYbNM7a1.jpg',
+  'https://static.polityka.pl/_resource/res/path/3f/39/3f3935d7-59ce-46a6-8a5b-e8c848fad83c_f1400x900',
+  'https://www.overbuff.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fdoomfist.b1eb0045.png&w=3840&q=100',
+  'https://b.allegroimg.com/s512/01234a/0a6be6f7452b84a22d2ca30fda2b/ORYGINAL-BOB-MARLEY-OBRAZ-3D-PLAKAT-FLIP-XL-67CM',
+  'https://upload.wikimedia.org/wikipedia/commons/8/84/Martin_Luther_King_Jr_NYWTS.jpg',
+  'https://static.wikia.nocookie.net/rapandhiphop/images/e/e5/Travis_Scott.jpg/revision/latest?cb=20201007073517',
+  'https://ca-times.brightspotcdn.com/dims4/default/49b132f/2147483647/strip/true/crop/2048x1152+0+0/resize/1200x675!/quality/75/?url=https%3A%2F%2Fcalifornia-times-brightspot.s3.amazonaws.com%2Fc2%2Ff9%2F7635229409d65f508c014a3a8be6%2Fla-1487361005-kzxrybfvn0-snap-photo',
+  'https://i.gremicdn.pl/image/free/ec32caabd6a51b56bd89727fa0aded1a/?t=resize:fill:948:593,enlarge:1',
+  'https://cdn.nba.com/headshots/nba/latest/1040x760/2544.png',
+  'https://s4.tvp.pl/images2/d/d/8/uid_dd8ead7185e3f31507f49205c88975a81584769771956_width_1200_play_0_pos_0_gs_0_height_678_ronaldinho-fot-getty-images.jpg',
+  'https://rubikonwings.com/wp-content/uploads/2023/04/893.png',
+  'https://rm80.pl/wp-content/uploads/2017/02/100232-michael_jackson2_617_409.jpg',
+  'https://hips.hearstapps.com/hmg-prod/images/gettyimages-490703338.jpg?crop=1xw:1.0xh;center,top&resize=640:*',
+  'https://www.hindustantimes.com/ht-img/img/2023/05/26/550x309/ezgif-4-5e83476306_1685070528590_1685070540412.jpg',
+  'https://fwcdn.pl/ppo/60/63/676063/450507_1.3.jpg',
+  'https://mediaproxy.tvtropes.org/width/1200/https://static.tvtropes.org/pmwiki/pub/images/snoop_dogg.png',
+  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLTsK4ii7yYDDUFvfANRGV58Xdxa4UtVp6OQ&s',
+  'https://static.wikia.nocookie.net/characterprofile/images/3/3e/7DDA1C45-8678-4723-9554-0760465D975A.png/revision/latest?cb=20200701060300',
+  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRO-601ybrqMLyNaW9qHzBRI0jq1cmjnZ_5XQ&s',
+  'https://fwcdn.pl/ppo/45/05/4505/451577_1.3.jpg',
+  'https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/614.png',
+  'https://gymbeam.cz/blog/wp-content/uploads/2016/09/RONNIE_COLEMAN.jpg',
+  'https://upload.wikimedia.org/wikipedia/commons/e/e3/DavidGogginsMay08.jpg',
+  'https://tvn24.pl/_e/i/najnowsze/cdn-zdjecie-2809868-khaby-lame-ph8505667/alternates/WEBP_LANDSCAPE_480'
+];
+
+
+    const timerEl = document.getElementById('timer');
+    const scoreTeam1El = document.getElementById('score-team1');
+    const scoreTeam2El = document.getElementById('score-team2');
+
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(el => el.style.display = 'none');
+      document.getElementById(id).style.display = 'flex';
+    }
+
+    function updateScoreboard() {
+      scoreTeam1El.textContent = `Drużyna 1: ${team1}`;
+      scoreTeam2El.textContent = `Drużyna 2: ${team2}`;
+    }
+
+    function startGame() {
+      currentImageIndex = 0;
+      team1 = 0;
+      team2 = 0;
+      timer = timerDuration;
+      updateScoreboard();
+      showScreen('game-screen');
+      showImage(currentImageIndex);
+      startTimer();
+    }
+
+    function showImage(index) {
+      document.getElementById('game-image').src = images[index];
+    }
+
+    function startTimer() {
+      timerEl.textContent = timer;
+      if (interval) clearInterval(interval);
+      interval = setInterval(() => {
+        timer--;
+        timerEl.textContent = timer >= 0 ? timer : 0;
+        if (timer < 0) {
+          clearInterval(interval);
+          interval = null;
+          endGame();
+        }
+      }, 1000);
+    }
+
+    function nextImage() {
+      currentImageIndex++;
+      if (currentImageIndex >= totalImages) {
+        endGame();
+      } else {
+        showImage(currentImageIndex);
+      }
+    }
+
+    function endGame() {
+      showScreen('end-screen');
+      document.getElementById('final-score').textContent =
+        `Drużyna 1: ${team1} pkt | Drużyna 2: ${team2} pkt`;
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (document.getElementById('game-screen').style.display === 'flex') {
+        if (timer < 0) return;
+        if (e.key === '1') {
+          team1 += 2;
+          updateScoreboard();
+          nextImage();
+        } else if (e.key === '2') {
+          team2 += 2;
+          updateScoreboard();
+          nextImage();
+        } else if (e.key === '3') {
+          nextImage();
+        }
+      }
+    });
+
+    // Pokaż ekran startowy po załadowaniu strony
+    window.onload = () => {
+      showScreen('start-screen');
+    };
+  </script>
+</body>
+</html>
